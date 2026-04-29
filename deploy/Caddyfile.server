@@ -1,0 +1,8 @@
+www.dawnshift.xyz {
+    redir https://dawnshift.xyz{uri} permanent
+}
+
+dawnshift.xyz {
+    encode gzip zstd
+    reverse_proxy sub2api:8080
+}

@@ -9,10 +9,13 @@ redis_data/
 
 # Environment configuration (contains sensitive information)
 .env
+.env.server
 
 # Backup files
 *.backup
 *.bak
+*.tar
+*.tar.gz
 
 # Temporary files
 *.tmp

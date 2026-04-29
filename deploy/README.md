@@ -15,6 +15,11 @@ This directory contains files for deploying Sub2API on Linux servers.
 |------|-------------|
 | `docker-compose.yml` | Docker Compose configuration (named volumes) |
 | `docker-compose.local.yml` | Docker Compose configuration (local directories, easy migration) |
+| `docker-compose.server.yml` | Server deployment compose for importing a locally built image behind an existing reverse proxy |
+| `Caddyfile.dawnshift.example` | Example Caddy route for switching `dawnshift.xyz` to `sub2api` |
+| `Caddyfile.server` | Server Caddy config used by the dedicated `sub2api-caddy` edge container |
+| `init-env.ps1` | Windows helper to generate `.env` and local data directories from the repo template |
+| `DAWNSHIFT_DEPLOY_CN.md` | Detailed Chinese runbook for local build, image transfer, server deployment, and cutover |
 | `docker-deploy.sh` | **One-click Docker deployment script (recommended)** |
 | `.env.example` | Docker environment variables template |
 | `DOCKER.md` | Docker Hub documentation |
