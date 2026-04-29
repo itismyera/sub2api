@@ -73,6 +73,18 @@ func TestPcParseInt(t *testing.T) {
 	}
 }
 
+func TestSplitTypesEmptyReturnsNonNilSlice(t *testing.T) {
+	t.Parallel()
+
+	got := splitTypes("")
+	if got == nil {
+		t.Fatal("splitTypes(\"\") returned nil; API clients expect []")
+	}
+	if len(got) != 0 {
+		t.Fatalf("splitTypes(\"\") length = %d, want 0", len(got))
+	}
+}
+
 func TestParsePaymentConfig(t *testing.T) {
 	t.Parallel()
 
