@@ -131,6 +131,10 @@ docs/*
 !docs/PAYMENT.md
 !docs/PAYMENT_CN.md
 !docs/ADMIN_PAYMENT_INTEGRATION_API.md
+!docs/ADMIN_QA_CN.md
+!docs/assets/
+!docs/assets/admin-qa/
+!docs/assets/admin-qa/.gitkeep
 .serena/
 .codex/
 frontend/coverage/
