@@ -178,6 +178,20 @@ export interface CustomEndpoint {
   description: string
 }
 
+export interface SitePage {
+  key: string
+  title: string
+  slug: string
+  mode: 'link' | 'html' | 'markdown'
+  content: string
+  enabled: boolean
+}
+
+export interface ContactChannel {
+  label: string
+  url: string
+}
+
 export interface PublicSettings {
   registration_enabled: boolean
   email_verify_enabled: boolean
@@ -193,12 +207,14 @@ export interface PublicSettings {
   site_subtitle: string
   api_base_url: string
   contact_info: string
+  contact_channels?: ContactChannel[]
   doc_url: string
   home_content: string
   hide_ccs_import_button: boolean
   payment_enabled: boolean
   table_default_page_size: number
   table_page_size_options: number[]
+  site_pages?: SitePage[]
   custom_menu_items: CustomMenuItem[]
   custom_endpoints: CustomEndpoint[]
   linuxdo_oauth_enabled: boolean

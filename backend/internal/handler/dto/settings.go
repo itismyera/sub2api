@@ -22,6 +22,17 @@ type CustomEndpoint struct {
 	Description string `json:"description"`
 }
 
+// SitePage represents an admin-managed public page.
+type SitePage struct {
+	Key       string `json:"key"`
+	Title     string `json:"title"`
+	Slug      string `json:"slug"`
+	Mode      string `json:"mode"` // "link", "html", or "markdown"
+	Content   string `json:"content"`
+	Enabled   bool   `json:"enabled"`
+	UpdatedAt string `json:"updated_at,omitempty"`
+}
+
 // SystemSettings represents the admin settings API response payload.
 type SystemSettings struct {
 	RegistrationEnabled              bool     `json:"registration_enabled"`
@@ -103,6 +114,7 @@ type SystemSettings struct {
 	PurchaseSubscriptionURL     string           `json:"purchase_subscription_url"`
 	TableDefaultPageSize        int              `json:"table_default_page_size"`
 	TablePageSizeOptions        []int            `json:"table_page_size_options"`
+	SitePages                   []SitePage       `json:"site_pages"`
 	CustomMenuItems             []CustomMenuItem `json:"custom_menu_items"`
 	CustomEndpoints             []CustomEndpoint `json:"custom_endpoints"`
 
@@ -232,6 +244,7 @@ type PublicSettings struct {
 	PurchaseSubscriptionURL          string           `json:"purchase_subscription_url"`
 	TableDefaultPageSize             int              `json:"table_default_page_size"`
 	TablePageSizeOptions             []int            `json:"table_page_size_options"`
+	SitePages                        []SitePage       `json:"site_pages"`
 	CustomMenuItems                  []CustomMenuItem `json:"custom_menu_items"`
 	CustomEndpoints                  []CustomEndpoint `json:"custom_endpoints"`
 	LinuxDoOAuthEnabled              bool             `json:"linuxdo_oauth_enabled"`
@@ -344,6 +357,20 @@ func ParseUserVisibleMenuItems(raw string) []CustomMenuItem {
 		}
 	}
 	return filtered
+}
+
+// ParseSitePages parses a JSON string into a slice of public site pages.
+// Returns empty slice on empty/invalid input.
+func ParseSitePages(raw string) []SitePage {
+	raw = strings.TrimSpace(raw)
+	if raw == "" || raw == "[]" {
+		return []SitePage{}
+	}
+	var pages []SitePage
+	if err := json.Unmarshal([]byte(raw), &pages); err != nil {
+		return []SitePage{}
+	}
+	return pages
 }
 
 // ParseCustomEndpoints parses a JSON string into a slice of CustomEndpoint.

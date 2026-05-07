@@ -1,5 +1,6 @@
 docs/claude-relay-service/
 .codex
+.omx/
 
 # ===================
 # Go 后端
@@ -132,6 +133,7 @@ docs/*
 !docs/PAYMENT_CN.md
 !docs/ADMIN_PAYMENT_INTEGRATION_API.md
 !docs/ADMIN_QA_CN.md
+!docs/LUMIO_PUBLIC_CLONE_PLAN_CN.md
 !docs/assets/
 !docs/assets/admin-qa/
 !docs/assets/admin-qa/.gitkeep

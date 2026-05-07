@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from "../client";
+import type { SitePage } from "@/types";
 import type { CustomMenuItem, CustomEndpoint, NotifyEmailEntry } from "@/types";
 
 export interface DefaultSubscriptionSetting {
@@ -348,6 +349,7 @@ export interface SystemSettings {
   table_default_page_size: number;
   table_page_size_options: number[];
   backend_mode_enabled: boolean;
+  site_pages: SitePage[];
   custom_menu_items: CustomMenuItem[];
   custom_endpoints: CustomEndpoint[];
   // SMTP settings
@@ -539,6 +541,7 @@ export interface UpdateSettingsRequest {
   table_default_page_size?: number;
   table_page_size_options?: number[];
   backend_mode_enabled?: boolean;
+  site_pages?: SitePage[];
   custom_menu_items?: CustomMenuItem[];
   custom_endpoints?: CustomEndpoint[];
   smtp_host?: string;
@@ -678,6 +681,26 @@ export async function updateSettings(
   const { data } = await apiClient.put<SystemSettings>(
     "/admin/settings",
     settings,
+  );
+  return data;
+}
+
+export interface ImportSitePageAssetsRequest {
+  slug: string;
+  content: string;
+}
+
+export interface ImportSitePageAssetsResponse {
+  content: string;
+  assets: string[];
+}
+
+export async function importSitePageAssets(
+  payload: ImportSitePageAssetsRequest,
+): Promise<ImportSitePageAssetsResponse> {
+  const { data } = await apiClient.post<ImportSitePageAssetsResponse>(
+    "/admin/settings/site-page-assets/import",
+    payload,
   );
   return data;
 }
@@ -1041,6 +1064,7 @@ export async function resetWebSearchUsage(payload: {
 export const settingsAPI = {
   getSettings,
   updateSettings,
+  importSitePageAssets,
   testSmtpConnection,
   sendTestEmail,
   getAdminApiKey,

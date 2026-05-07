@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"log"
+	"net/http"
 	"sync/atomic"
 	"time"
 
@@ -82,6 +83,7 @@ func SetupRouter(
 
 	// 注册路由
 	registerRoutes(r, handlers, jwtAuth, adminAuth, apiKeyAuth, apiKeyService, subscriptionService, opsService, settingService, cfg, redisClient)
+	r.StaticFS("/site-assets", http.Dir("data/public/site-assets"))
 
 	return r
 }

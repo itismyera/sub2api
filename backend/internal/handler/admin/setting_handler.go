@@ -181,6 +181,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		PurchaseSubscriptionURL:                settings.PurchaseSubscriptionURL,
 		TableDefaultPageSize:                   settings.TableDefaultPageSize,
 		TablePageSizeOptions:                   settings.TablePageSizeOptions,
+		SitePages:                              dto.ParseSitePages(settings.SitePages),
 		CustomMenuItems:                        dto.ParseCustomMenuItems(settings.CustomMenuItems),
 		CustomEndpoints:                        dto.ParseCustomEndpoints(settings.CustomEndpoints),
 		DefaultConcurrency:                     settings.DefaultConcurrency,
@@ -381,6 +382,7 @@ type UpdateSettingsRequest struct {
 	PurchaseSubscriptionURL     *string               `json:"purchase_subscription_url"`
 	TableDefaultPageSize        int                   `json:"table_default_page_size"`
 	TablePageSizeOptions        []int                 `json:"table_page_size_options"`
+	SitePages                   *[]dto.SitePage       `json:"site_pages"`
 	CustomMenuItems             *[]dto.CustomMenuItem `json:"custom_menu_items"`
 	CustomEndpoints             *[]dto.CustomEndpoint `json:"custom_endpoints"`
 
@@ -1055,6 +1057,91 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		maxEndpointDescriptionLen = 200
 	)
 
+	const (
+		maxSitePages          = 20
+		maxSitePageKeyLen     = 64
+		maxSitePageSlugLen    = 128
+		maxSitePageTitleLen   = 120
+		maxSitePageContentLen = 200 * 1024
+	)
+
+	sitePagesJSON := previousSettings.SitePages
+	if req.SitePages != nil {
+		pages := *req.SitePages
+		if len(pages) > maxSitePages {
+			response.BadRequest(c, "Too many site pages (max 20)")
+			return
+		}
+		seenKeys := make(map[string]struct{}, len(pages))
+		seenSlugs := make(map[string]struct{}, len(pages))
+		for i, page := range pages {
+			pages[i].Key = strings.TrimSpace(page.Key)
+			pages[i].Title = strings.TrimSpace(page.Title)
+			pages[i].Slug = strings.Trim(strings.TrimSpace(page.Slug), "/")
+			pages[i].Mode = strings.TrimSpace(page.Mode)
+			if pages[i].Key == "" {
+				response.BadRequest(c, "Site page key is required")
+				return
+			}
+			if len(pages[i].Key) > maxSitePageKeyLen || !menuItemIDPattern.MatchString(pages[i].Key) {
+				response.BadRequest(c, "Site page key contains invalid characters (only a-z, A-Z, 0-9, - and _ are allowed)")
+				return
+			}
+			if pages[i].Title == "" {
+				response.BadRequest(c, "Site page title is required")
+				return
+			}
+			if len(pages[i].Title) > maxSitePageTitleLen {
+				response.BadRequest(c, "Site page title is too long (max 120 characters)")
+				return
+			}
+			if pages[i].Slug == "" {
+				response.BadRequest(c, "Site page slug is required")
+				return
+			}
+			if len(pages[i].Slug) > maxSitePageSlugLen {
+				response.BadRequest(c, "Site page slug is too long (max 128 characters)")
+				return
+			}
+			for _, segment := range strings.Split(pages[i].Slug, "/") {
+				if segment == "" || !menuItemIDPattern.MatchString(segment) {
+					response.BadRequest(c, "Site page slug contains invalid characters (only a-z, A-Z, 0-9, - and _ are allowed)")
+					return
+				}
+			}
+			if pages[i].Mode != "link" && pages[i].Mode != "html" && pages[i].Mode != "markdown" {
+				response.BadRequest(c, "Site page mode must be 'link', 'html' or 'markdown'")
+				return
+			}
+			if len(pages[i].Content) > maxSitePageContentLen {
+				response.BadRequest(c, "Site page content is too large (max 200KB)")
+				return
+			}
+			if pages[i].Mode == "link" && strings.TrimSpace(pages[i].Content) != "" {
+				if err := config.ValidateAbsoluteHTTPURL(strings.TrimSpace(pages[i].Content)); err != nil {
+					response.BadRequest(c, "Site page link content must be an absolute http(s) URL")
+					return
+				}
+			}
+			if _, exists := seenKeys[pages[i].Key]; exists {
+				response.BadRequest(c, "Duplicate site page key: "+pages[i].Key)
+				return
+			}
+			if _, exists := seenSlugs[pages[i].Slug]; exists {
+				response.BadRequest(c, "Duplicate site page slug: "+pages[i].Slug)
+				return
+			}
+			seenKeys[pages[i].Key] = struct{}{}
+			seenSlugs[pages[i].Slug] = struct{}{}
+		}
+		pageBytes, err := json.Marshal(pages)
+		if err != nil {
+			response.BadRequest(c, "Failed to serialize site pages")
+			return
+		}
+		sitePagesJSON = string(pageBytes)
+	}
+
 	customEndpointsJSON := previousSettings.CustomEndpoints
 	if req.CustomEndpoints != nil {
 		endpoints := *req.CustomEndpoints
@@ -1212,6 +1299,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		PurchaseSubscriptionURL:          purchaseURL,
 		TableDefaultPageSize:             req.TableDefaultPageSize,
 		TablePageSizeOptions:             req.TablePageSizeOptions,
+		SitePages:                        sitePagesJSON,
 		CustomMenuItems:                  customMenuJSON,
 		CustomEndpoints:                  customEndpointsJSON,
 		DefaultConcurrency:               req.DefaultConcurrency,
@@ -1550,6 +1638,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		PurchaseSubscriptionURL:                updatedSettings.PurchaseSubscriptionURL,
 		TableDefaultPageSize:                   updatedSettings.TableDefaultPageSize,
 		TablePageSizeOptions:                   updatedSettings.TablePageSizeOptions,
+		SitePages:                              dto.ParseSitePages(updatedSettings.SitePages),
 		CustomMenuItems:                        dto.ParseCustomMenuItems(updatedSettings.CustomMenuItems),
 		CustomEndpoints:                        dto.ParseCustomEndpoints(updatedSettings.CustomEndpoints),
 		DefaultConcurrency:                     updatedSettings.DefaultConcurrency,
@@ -1861,6 +1950,9 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	}
 	if before.HomeContent != after.HomeContent {
 		changed = append(changed, "home_content")
+	}
+	if before.SitePages != after.SitePages {
+		changed = append(changed, "site_pages")
 	}
 	if before.HideCcsImportButton != after.HideCcsImportButton {
 		changed = append(changed, "hide_ccs_import_button")

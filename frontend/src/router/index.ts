@@ -143,6 +143,37 @@ const routes: RouteRecordRaw[] = [
       title: 'Key Usage',
     }
   },
+  {
+    path: '/pages/:slug',
+    name: 'PublicSitePage',
+    component: () => import('@/views/PublicSitePageView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Public Page',
+    }
+  },
+  {
+    path: '/doc/:page',
+    redirect: to => `/pages/${to.params.page}`
+  },
+  {
+    path: '/:page(features|pricing|status|image2)',
+    name: 'PublicNavPage',
+    component: () => import('@/views/PublicNavPageView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Public Page',
+    }
+  },
+  {
+    path: '/:slug(docs|terms|privacy)',
+    name: 'PublicManagedPage',
+    component: () => import('@/views/PublicSitePageView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Public Page',
+    }
+  },
 
   // ==================== User Routes ====================
   {
@@ -506,6 +537,17 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/admin/public-pages',
+    name: 'AdminPublicPages',
+    component: () => import('@/views/admin/PublicPagesView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Public Pages',
+      descriptionKey: 'Admin managed public pages'
+    }
+  },
+  {
     path: '/admin/usage',
     name: 'AdminUsage',
     component: () => import('@/views/admin/UsageView.vue'),
@@ -681,7 +723,7 @@ router.beforeEach((to, _from, next) => {
     const menuItem = publicItems.find((item) => item.id === id)
       ?? (authStore.isAdmin ? adminSettingsStore.customMenuItems.find((item) => item.id === id) : undefined)
     if (menuItem?.label) {
-      const siteName = appStore.siteName || 'Sub2API'
+      const siteName = appStore.siteName || 'Dwanshift'
       document.title = `${menuItem.label} - ${siteName}`
     } else {
       document.title = resolveDocumentTitle(to.meta.title, appStore.siteName, to.meta.titleKey as string)
